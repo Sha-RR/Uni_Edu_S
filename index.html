@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduReach — Student Recruitment Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: rgba(255,255,255,0.07);
+    --accent: #4f8ef7;
+    --accent2: #a78bfa;
+    --accent3: #34d399;
+    --accent4: #fb923c;
+    --text: #f0f4ff;
+    --muted: #8896b0;
+    --danger: #f87171;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
+
+  /* SIDEBAR */
+  .sidebar {
+    position:fixed; left:0; top:0; width:240px; height:100vh;
+    background:var(--surface); border-right:1px solid var(--border);
+    display:flex; flex-direction:column; z-index:100; padding:0;
+  }
+  .logo {
+    padding:28px 24px 20px;
+    font-family:'Syne',sans-serif; font-size:1.3rem; font-weight:800;
+    letter-spacing:-0.5px;
+    border-bottom:1px solid var(--border);
+  }
+  .logo span { color:var(--accent); }
+  .nav { flex:1; padding:16px 12px; overflow-y:auto; }
+  .nav-section { font-size:0.65rem; font-weight:600; letter-spacing:2px; color:var(--muted); text-transform:uppercase; padding:8px 12px 6px; margin-top:8px; }
+  .nav-item {
+    display:flex; align-items:center; gap:10px; padding:10px 12px;
+    border-radius:10px; cursor:pointer; color:var(--muted); font-size:0.88rem;
+    transition:all .2s; margin-bottom:2px; font-weight:500;
+  }
+  .nav-item:hover { background:var(--surface2); color:var(--text); }
+  .nav-item.active { background:rgba(79,142,247,0.15); color:var(--accent); }
+  .nav-item .icon { width:18px; text-align:center; font-size:1rem; }
+  .nav-badge { margin-left:auto; background:var(--accent); color:#fff; font-size:0.65rem; font-weight:700; padding:2px 7px; border-radius:20px; }
+  .sidebar-footer { padding:16px; border-top:1px solid var(--border); }
+  .user-card { display:flex; align-items:center; gap:10px; }
+  .avatar { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0; }
+  .user-info .name { font-size:0.85rem; font-weight:600; }
+  .user-info .role { font-size:0.72rem; color:var(--muted); }
+
+  /* MAIN */
+  .main { margin-left:240px; min-height:100vh; }
+  .topbar {
+    padding:20px 32px; display:flex; align-items:center; justify-content:space-between;
+    border-bottom:1px solid var(--border); background:var(--bg); position:sticky; top:0; z-index:50;
+  }
+  .page-title { font-family:'Syne',sans-serif; font-size:1.5rem; font-weight:700; }
+  .topbar-right { display:flex; align-items:center; gap:12px; }
+  .btn {
+    padding:9px 18px; border-radius:10px; border:none; cursor:pointer;
+    font-family:'DM Sans',sans-serif; font-size:0.85rem; font-weight:500; transition:all .2s;
+  }
+  .btn-primary { background:var(--accent); color:#fff; }
+  .btn-primary:hover { background:#6aa0ff; transform:translateY(-1px); }
+  .btn-ghost { background:var(--surface); color:var(--text); border:1px solid var(--border); }
+  .btn-ghost:hover { background:var(--surface2); }
+  .btn-sm { padding:6px 14px; font-size:0.8rem; }
+  .btn-danger { background:rgba(248,113,113,0.15); color:var(--danger); border:1px solid rgba(248,113,113,0.2); }
+
+  .content { padding:28px 32px; }
+
+  /* PAGES */
+  .page { display:none; animation:fadeIn .3s ease; }
+  .page.active { display:block; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+  /* STATS */
+  .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px; }
+  .stat-card {
+    background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px;
+    position:relative; overflow:hidden;
+  }
+  .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+  .stat-card.blue::before { background:linear-gradient(90deg,var(--accent),var(--accent2)); }
+  .stat-card.green::before { background:linear-gradient(90deg,var(--accent3),#6ee7b7); }
+  .stat-card.orange::before { background:linear-gradient(90deg,var(--accent4),#fbbf24); }
+  .stat-card.purple::before { background:linear-gradient(90deg,var(--accent2),#c4b5fd); }
+  .stat-label { font-size:0.75rem; color:var(--muted); font-weight:500; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; }
+  .stat-value { font-family:'Syne',sans-serif; font-size:2rem; font-weight:700; line-height:1; }
+  .stat-change { font-size:0.75rem; margin-top:8px; }
+  .stat-change.up { color:var(--accent3); }
+  .stat-change.down { color:var(--danger); }
+
+  /* GRID LAYOUTS */
+  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:24px; }
+  .three-col { display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; margin-bottom:24px; }
+  .card {
+    background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:22px;
+  }
+  .card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+  .card-title { font-family:'Syne',sans-serif; font-size:0.95rem; font-weight:700; }
+  .card-subtitle { font-size:0.78rem; color:var(--muted); margin-top:2px; }
+
+  /* TABLE */
+  .table-wrap { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; font-size:0.85rem; }
+  th { text-align:left; padding:10px 14px; font-size:0.72rem; font-weight:600; text-transform:uppercase; letter-spacing:1px; color:var(--muted); border-bottom:1px solid var(--border); }
+  td { padding:13px 14px; border-bottom:1px solid var(--border); }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:rgba(255,255,255,0.02); }
+  .badge {
+    display:inline-block; padding:3px 10px; border-radius:20px; font-size:0.72rem; font-weight:600;
+  }
+  .badge-green { background:rgba(52,211,153,0.12); color:var(--accent3); }
+  .badge-blue { background:rgba(79,142,247,0.12); color:var(--accent); }
+  .badge-orange { background:rgba(251,146,60,0.12); color:var(--accent4); }
+  .badge-purple { background:rgba(167,139,250,0.12); color:var(--accent2); }
+  .badge-red { background:rgba(248,113,113,0.12); color:var(--danger); }
+  .badge-gray { background:rgba(136,150,176,0.12); color:var(--muted); }
+
+  /* PIPELINE */
+  .pipeline { display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin-bottom:24px; }
+  .pipeline-col { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px; min-height:300px; }
+  .pipeline-col-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .pipeline-col-title { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; }
+  .pipeline-count { width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:700; }
+  .lead-card {
+    background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:12px; margin-bottom:8px; cursor:pointer;
+    transition:all .2s;
+  }
+  .lead-card:hover { border-color:var(--accent); transform:translateY(-2px); }
+  .lead-card .lname { font-size:0.85rem; font-weight:600; margin-bottom:4px; }
+  .lead-card .lmeta { font-size:0.72rem; color:var(--muted); }
+  .lead-card .lprogram { font-size:0.72rem; color:var(--accent); margin-top:4px; }
+
+  /* CAMPAIGN BUILDER */
+  .campaign-grid { display:grid; grid-template-columns:1fr 380px; gap:20px; }
+  .form-group { margin-bottom:16px; }
+  label { display:block; font-size:0.8rem; font-weight:600; color:var(--muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px; }
+  input, select, textarea {
+    width:100%; background:var(--bg); border:1px solid var(--border); border-radius:10px;
+    padding:11px 14px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:0.88rem;
+    outline:none; transition:border-color .2s;
+  }
+  input:focus, select:focus, textarea:focus { border-color:var(--accent); }
+  textarea { resize:vertical; min-height:100px; }
+  select option { background:var(--surface); }
+  .channel-tabs { display:flex; gap:8px; margin-bottom:20px; }
+  .channel-tab {
+    padding:8px 18px; border-radius:10px; border:1px solid var(--border); background:var(--bg);
+    color:var(--muted); cursor:pointer; font-size:0.83rem; font-weight:500; transition:all .2s;
+  }
+  .channel-tab.active { background:rgba(79,142,247,0.15); color:var(--accent); border-color:rgba(79,142,247,0.3); }
+  .preview-phone {
+    background:var(--bg); border:2px solid var(--border); border-radius:28px; padding:20px 16px;
+    min-height:400px; position:relative;
+  }
+  .preview-label { text-align:center; font-size:0.7rem; color:var(--muted); margin-bottom:16px; text-transform:uppercase; letter-spacing:2px; }
+  .sms-bubble { background:var(--surface2); border-radius:14px 14px 14px 4px; padding:12px 16px; font-size:0.83rem; line-height:1.6; max-width:85%; color:var(--text); }
+  .email-preview { background:var(--surface2); border-radius:12px; overflow:hidden; }
+  .email-header-preview { background:linear-gradient(135deg,var(--accent),var(--accent2)); padding:16px; text-align:center; }
+  .email-header-preview h3 { font-family:'Syne',sans-serif; font-size:1rem; color:#fff; }
+  .email-body-preview { padding:16px; font-size:0.8rem; line-height:1.7; color:var(--muted); }
+  .discount-box-preview { background:rgba(79,142,247,0.1); border:1px dashed rgba(79,142,247,0.4); border-radius:8px; padding:10px; text-align:center; margin:10px 0; font-size:0.85rem; font-weight:700; color:var(--accent); }
+
+  /* DISCOUNT CODES */
+  .codes-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px; }
+  .code-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:18px; transition:all .2s; }
+  .code-card:hover { border-color:var(--accent); }
+  .code-value { font-family:'Syne',sans-serif; font-size:1.4rem; font-weight:800; color:var(--accent); letter-spacing:2px; margin-bottom:8px; }
+  .code-details { font-size:0.8rem; color:var(--muted); line-height:1.7; }
+  .code-progress { margin-top:12px; height:4px; background:var(--bg); border-radius:4px; overflow:hidden; }
+  .code-bar { height:100%; border-radius:4px; background:linear-gradient(90deg,var(--accent),var(--accent2)); }
+
+  /* ANALYTICS */
+  .chart-placeholder {
+    background:var(--bg); border-radius:12px; padding:20px; height:180px; display:flex; align-items:flex-end; gap:8px;
+  }
+  .bar-group { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .bar { width:100%; border-radius:6px 6px 0 0; transition:all .3s; cursor:pointer; }
+  .bar:hover { filter:brightness(1.2); }
+  .bar-label { font-size:0.68rem; color:var(--muted); }
+  .donut-wrap { display:flex; align-items:center; gap:24px; }
+  .donut { width:110px; height:110px; flex-shrink:0; }
+  .donut-legend { flex:1; }
+  .legend-item { display:flex; align-items:center; gap:8px; margin-bottom:8px; font-size:0.8rem; }
+  .legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+
+  /* MODAL */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:200; align-items:center; justify-content:center; }
+  .modal-overlay.open { display:flex; }
+  .modal { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:28px; width:520px; max-width:90vw; animation:fadeIn .25s ease; }
+  .modal-title { font-family:'Syne',sans-serif; font-size:1.1rem; font-weight:700; margin-bottom:20px; }
+  .modal-footer { display:flex; gap:10px; justify-content:flex-end; margin-top:20px; }
+
+  /* TOAST */
+  .toast { position:fixed; bottom:28px; right:28px; background:var(--surface); border:1px solid var(--accent); border-radius:12px; padding:14px 20px; font-size:0.88rem; font-weight:500; z-index:300; display:none; animation:slideUp .3s ease; color:var(--accent); box-shadow:0 8px 32px rgba(0,0,0,0.4); }
+  @keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+
+  /* MISC */
+  .section-title { font-family:'Syne',sans-serif; font-size:1.1rem; font-weight:700; margin-bottom:16px; }
+  .flex { display:flex; align-items:center; }
+  .gap-8 { gap:8px; }
+  .gap-12 { gap:12px; }
+  .ml-auto { margin-left:auto; }
+  .text-muted { color:var(--muted); font-size:0.83rem; }
+  .mt-4 { margin-top:16px; }
+  .divider { border:none; border-top:1px solid var(--border); margin:20px 0; }
+  .dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .activity-item { display:flex; align-items:flex-start; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); }
+  .activity-item:last-child { border-bottom:none; }
+  .activity-icon { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.85rem; flex-shrink:0; }
+  .activity-text { font-size:0.83rem; line-height:1.5; }
+  .activity-time { font-size:0.72rem; color:var(--muted); margin-top:2px; }
+  .search-bar { display:flex; align-items:center; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:0 14px; gap:8px; width:260px; }
+  .search-bar input { border:none; background:transparent; padding:9px 0; }
+  .search-icon { color:var(--muted); font-size:0.9rem; }
+  .tag { display:inline-flex; align-items:center; gap:4px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:3px 10px; font-size:0.75rem; color:var(--muted); margin:2px; }
+  .segment-row { display:flex; align-items:center; padding:12px 0; border-bottom:1px solid var(--border); gap:12px; }
+  .segment-row:last-child { border-bottom:none; }
+  .checkbox { width:16px; height:16px; accent-color:var(--accent); cursor:pointer; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">Edu<span>Reach</span></div>
+  <nav class="nav">
+    <div class="nav-section">Overview</div>
+    <div class="nav-item active" onclick="navigate('dashboard',this)">
+      <span class="icon">📊</span> Dashboard
+    </div>
+
+    <div class="nav-section">Students</div>
+    <div class="nav-item" onclick="navigate('pipeline',this)">
+      <span class="icon">🎓</span> Lead Pipeline
+      <span class="nav-badge">24</span>
+    </div>
+    <div class="nav-item" onclick="navigate('students',this)">
+      <span class="icon">👥</span> All Students
+    </div>
+    <div class="nav-item" onclick="navigate('segments',this)">
+      <span class="icon">🎯</span> Segments
+    </div>
+
+    <div class="nav-section">Outreach</div>
+    <div class="nav-item" onclick="navigate('campaigns',this)">
+      <span class="icon">📨</span> Campaigns
+      <span class="nav-badge">3</span>
+    </div>
+    <div class="nav-item" onclick="navigate('discounts',this)">
+      <span class="icon">🏷️</span> Discount Codes
+    </div>
+    <div class="nav-item" onclick="navigate('templates',this)">
+      <span class="icon">📝</span> Templates
+    </div>
+
+    <div class="nav-section">Reports</div>
+    <div class="nav-item" onclick="navigate('analytics',this)">
+      <span class="icon">📈</span> Analytics
+    </div>
+    <div class="nav-item" onclick="navigate('enrollments',this)">
+      <span class="icon">✅</span> Enrollments
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="avatar">AD</div>
+      <div class="user-info">
+        <div class="name">Admin User</div>
+        <div class="role">Admissions Officer</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="page-title" id="pageTitle">Dashboard</div>
+    <div class="topbar-right">
+      <div class="search-bar"><span class="search-icon">🔍</span><input placeholder="Search students, campaigns…"></div>
+      <button class="btn btn-primary" onclick="openAddStudent()">+ Add Student</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card blue">
+          <div class="stat-label">Total Leads</div>
+          <div class="stat-value">1,284</div>
+          <div class="stat-change up">▲ 14.2% this month</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-label">Enrolled</div>
+          <div class="stat-value">342</div>
+          <div class="stat-change up">▲ 8.6% this month</div>
+        </div>
+        <div class="stat-card orange">
+          <div class="stat-label">Campaigns Sent</div>
+          <div class="stat-value">47</div>
+          <div class="stat-change up">▲ 3 this week</div>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-label">Discount Redeemed</div>
+          <div class="stat-value">128</div>
+          <div class="stat-change up">▲ 22% vs last month</div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Monthly Enrollments</div><div class="card-subtitle">Bachelor's & Master's programs</div></div>
+          </div>
+          <div class="chart-placeholder" id="enrollChart"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Lead Sources</div><div class="card-subtitle">Where students come from</div></div>
+          </div>
+          <div class="donut-wrap" style="padding:10px 0">
+            <svg class="donut" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#1a2235" stroke-width="18"/>
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#4f8ef7" stroke-width="18" stroke-dasharray="100 152" stroke-dashoffset="0" transform="rotate(-90 50 50)"/>
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#a78bfa" stroke-width="18" stroke-dasharray="52 200" stroke-dashoffset="-100" transform="rotate(-90 50 50)"/>
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#34d399" stroke-width="18" stroke-dasharray="40 212" stroke-dashoffset="-152" transform="rotate(-90 50 50)"/>
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#fb923c" stroke-width="18" stroke-dasharray="20 232" stroke-dashoffset="-192" transform="rotate(-90 50 50)"/>
+            </svg>
+            <div class="donut-legend">
+              <div class="legend-item"><div class="legend-dot" style="background:#4f8ef7"></div>Email Campaigns <span style="margin-left:auto;font-weight:600">40%</span></div>
+              <div class="legend-item"><div class="legend-dot" style="background:#a78bfa"></div>Referrals <span style="margin-left:auto;font-weight:600">21%</span></div>
+              <div class="legend-item"><div class="legend-dot" style="background:#34d399"></div>LinkedIn Ads <span style="margin-left:auto;font-weight:600">16%</span></div>
+              <div class="legend-item"><div class="legend-dot" style="background:#fb923c"></div>WhatsApp/SMS <span style="margin-left:auto;font-weight:600">8%</span></div>
+              <div class="legend-item"><div class="legend-dot" style="background:#8896b0"></div>Other <span style="margin-left:auto;font-weight:600">15%</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Recent Activity</div></div>
+          <div class="activity-item">
+            <div class="activity-icon" style="background:rgba(79,142,247,0.15)">📧</div>
+            <div><div class="activity-text"><strong>Spring 2026 Campaign</strong> sent to 420 students</div><div class="activity-time">2 hours ago</div></div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-icon" style="background:rgba(52,211,153,0.15)">✅</div>
+            <div><div class="activity-text"><strong>Sofia Martinez</strong> enrolled in MBA Program</div><div class="activity-time">4 hours ago</div></div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-icon" style="background:rgba(167,139,250,0.15)">🏷️</div>
+            <div><div class="activity-text">Discount code <strong>SPRING25</strong> redeemed 12 times</div><div class="activity-time">Yesterday</div></div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-icon" style="background:rgba(251,146,60,0.15)">💬</div>
+            <div><div class="activity-text">WhatsApp blast sent to <strong>150 leads</strong> — 84% read rate</div><div class="activity-time">Yesterday</div></div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-icon" style="background:rgba(79,142,247,0.15)">🎓</div>
+            <div><div class="activity-text"><strong>24 new leads</strong> added from LinkedIn outreach</div><div class="activity-time">2 days ago</div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-title">Pipeline Snapshot</div><button class="btn btn-ghost btn-sm" onclick="navigate('pipeline', document.querySelector('[onclick*=pipeline]'))">View All</button></div>
+          <table>
+            <tr><th>Student</th><th>Program</th><th>Stage</th></tr>
+            <tr><td>James O.</td><td>BSc CS</td><td><span class="badge badge-blue">Interview</span></td></tr>
+            <tr><td>Aisha K.</td><td>MBA</td><td><span class="badge badge-orange">Applied</span></td></tr>
+            <tr><td>Marco T.</td><td>MSc Data</td><td><span class="badge badge-purple">Offer Sent</span></td></tr>
+            <tr><td>Priya S.</td><td>BA Psych</td><td><span class="badge badge-green">Enrolled ✓</span></td></tr>
+            <tr><td>Lena W.</td><td>MBA</td><td><span class="badge badge-gray">New Lead</span></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PIPELINE -->
+    <div class="page" id="page-pipeline">
+      <div class="pipeline">
+        <div class="pipeline-col">
+          <div class="pipeline-col-header">
+            <span class="pipeline-col-title" style="color:#8896b0">New Leads</span>
+            <div class="pipeline-count" style="background:rgba(136,150,176,0.15);color:#8896b0">8</div>
+          </div>
+          <div class="lead-card"><div class="lname">Lena Weber</div><div class="lmeta">🇩🇪 Germany</div><div class="lprogram">MBA Program</div></div>
+          <div class="lead-card"><div class="lname">Ahmed Yusuf</div><div class="lmeta">🇳🇬 Nigeria</div><div class="lprogram">BSc Engineering</div></div>
+          <div class="lead-card"><div class="lname">Clara Novak</div><div class="lmeta">🇨🇿 Czech Rep.</div><div class="lprogram">MSc Finance</div></div>
+        </div>
+        <div class="pipeline-col">
+          <div class="pipeline-col-header">
+            <span class="pipeline-col-title" style="color:#4f8ef7">Contacted</span>
+            <div class="pipeline-count" style="background:rgba(79,142,247,0.15);color:#4f8ef7">6</div>
+          </div>
+          <div class="lead-card"><div class="lname">James Okafor</div><div class="lmeta">📧 Email sent</div><div class="lprogram">BSc CS</div></div>
+          <div class="lead-card"><div class="lname">Mei Lin</div><div class="lmeta">💬 WhatsApp</div><div class="lprogram">MSc Data Sci</div></div>
+        </div>
+        <div class="pipeline-col">
+          <div class="pipeline-col-header">
+            <span class="pipeline-col-title" style="color:#fb923c">Applied</span>
+            <div class="pipeline-count" style="background:rgba(251,146,60,0.15);color:#fb923c">5</div>
+          </div>
+          <div class="lead-card"><div class="lname">Aisha Kamara</div><div class="lmeta">🏷️ Used SPRING25</div><div class="lprogram">MBA</div></div>
+          <div class="lead-card"><div class="lname">Raj Patel</div><div class="lmeta">📄 Docs submitted</div><div class="lprogram">BSc Business</div></div>
+          <div class="lead-card"><div class="lname">Sophie Moreau</div><div class="lmeta">📄 Docs pending</div><div class="lprogram">MA Comm.</div></div>
+        </div>
+        <div class="pipeline-col">
+          <div class="pipeline-col-header">
+            <span class="pipeline-col-title" style="color:#a78bfa">Offer Sent</span>
+            <div class="pipeline-count" style="background:rgba(167,139,250,0.15);color:#a78bfa">3</div>
+          </div>
+          <div class="lead-card"><div class="lname">Marco Torres</div><div class="lmeta">⏳ Awaiting reply</div><div class="lprogram">MSc Data Sci</div></div>
+          <div class="lead-card"><div class="lname">Yuki Tanaka</div><div class="lmeta">💰 30% discount</div><div class="lprogram">MBA</div></div>
+        </div>
+        <div class="pipeline-col">
+          <div class="pipeline-col-header">
+            <span class="pipeline-col-title" style="color:#34d399">Enrolled</span>
+            <div class="pipeline-count" style="background:rgba(52,211,153,0.15);color:#34d399">2</div>
+          </div>
+          <div class="lead-card"><div class="lname">Priya Sharma</div><div class="lmeta">✅ Fees paid</div><div class="lprogram">BA Psychology</div></div>
+          <div class="lead-card"><div class="lname">Sofia Martinez</div><div class="lmeta">✅ Orientation done</div><div class="lprogram">MBA</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALL STUDENTS -->
+    <div class="page" id="page-students">
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">All Students & Leads</div><div class="card-subtitle">1,284 records</div></div>
+          <div class="flex gap-8">
+            <button class="btn btn-ghost btn-sm">Export CSV</button>
+            <button class="btn btn-primary btn-sm" onclick="openAddStudent()">+ Add Lead</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th><input type="checkbox" class="checkbox"></th><th>Name</th><th>Email</th><th>Program Interest</th><th>Source</th><th>Stage</th><th>Discount</th><th>Actions</th></tr></thead>
+            <tbody id="studentsTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEGMENTS -->
+    <div class="page" id="page-segments">
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Student Segments</div><button class="btn btn-primary btn-sm" onclick="showToast('Segment created!')">+ New Segment</button></div>
+          <div class="segment-row">
+            <input type="checkbox" class="checkbox" checked>
+            <div style="flex:1"><div style="font-weight:600;font-size:0.88rem">🎓 Graduating Seniors 2025</div><div class="text-muted">Students graduating from high school this year</div></div>
+            <span class="badge badge-blue">420 students</span>
+          </div>
+          <div class="segment-row">
+            <input type="checkbox" class="checkbox" checked>
+            <div style="flex:1"><div style="font-weight:600;font-size:0.88rem">💼 MBA Prospects</div><div class="text-muted">Working professionals, age 25-35</div></div>
+            <span class="badge badge-purple">285 students</span>
+          </div>
+          <div class="segment-row">
+            <input type="checkbox" class="checkbox">
+            <div style="flex:1"><div style="font-weight:600;font-size:0.88rem">🌍 International Leads</div><div class="text-muted">Students from outside home country</div></div>
+            <span class="badge badge-orange">198 students</span>
+          </div>
+          <div class="segment-row">
+            <input type="checkbox" class="checkbox">
+            <div style="flex:1"><div style="font-weight:600;font-size:0.88rem">♻️ Re-engagement</div><div class="text-muted">Leads inactive for 30+ days</div></div>
+            <span class="badge badge-red">74 students</span>
+          </div>
+          <div class="segment-row">
+            <input type="checkbox" class="checkbox">
+            <div style="flex:1"><div style="font-weight:600;font-size:0.88rem">🏷️ Discount Eligible</div><div class="text-muted">Applied but haven't enrolled yet</div></div>
+            <span class="badge badge-green">142 students</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Build a Segment</div></div>
+          <div class="form-group"><label>Segment Name</label><input placeholder="e.g. STEM Graduates 2025"></div>
+          <div class="form-group"><label>Program Interest</label><select><option>Any Program</option><option>Bachelor's Programs</option><option>Master's Programs</option><option>MBA</option></select></div>
+          <div class="form-group"><label>Lead Stage</label><select><option>All Stages</option><option>New Lead</option><option>Contacted</option><option>Applied</option></select></div>
+          <div class="form-group"><label>Location</label><input placeholder="e.g. United States, Europe…"></div>
+          <div class="form-group"><label>Source</label><select><option>All Sources</option><option>Email Campaign</option><option>LinkedIn</option><option>Referral</option><option>WhatsApp</option></select></div>
+          <button class="btn btn-primary" style="width:100%" onclick="showToast('Segment saved with 0 matched students')">Save Segment</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CAMPAIGNS -->
+    <div class="page" id="page-campaigns">
+      <div class="campaign-grid">
+        <div>
+          <div class="card-header" style="margin-bottom:16px">
+            <div class="card-title">New Campaign</div>
+          </div>
+          <div class="channel-tabs">
+            <div class="channel-tab active" onclick="switchChannel('email',this)">📧 Email</div>
+            <div class="channel-tab" onclick="switchChannel('sms',this)">💬 SMS</div>
+            <div class="channel-tab" onclick="switchChannel('whatsapp',this)">📱 WhatsApp</div>
+          </div>
+          <div class="card">
+            <div class="form-group"><label>Campaign Name</label><input id="campName" placeholder="e.g. Spring 2026 Enrollment Drive" oninput="updatePreview()"></div>
+            <div class="form-group"><label>Target Segment</label><select id="campSegment"><option>🎓 Graduating Seniors 2025 (420)</option><option>💼 MBA Prospects (285)</option><option>🌍 International Leads (198)</option><option>♻️ Re-engagement (74)</option></select></div>
+            <div class="form-group" id="subjectGroup"><label>Subject Line</label><input id="campSubject" placeholder="🎓 Your future at [University] awaits!" oninput="updatePreview()"></div>
+            <div class="form-group"><label>Message</label>
+              <textarea id="campBody" oninput="updatePreview()" placeholder="Hi {{first_name}},&#10;&#10;We'd love to have you join our {{program}} program...&#10;&#10;Use code {{discount_code}} to get {{discount}}% off your tuition fees!&#10;&#10;Apply now: {{apply_link}}">Hi {{first_name}},
+
+We're excited to invite you to apply for our {{program}} at Global University!
+
+Spaces are filling fast for our upcoming intake. As a special offer, use the code below to receive 25% off your application fees.
+
+Apply before March 31st to secure your spot!</textarea>
+            </div>
+            <div class="form-group"><label>Attach Discount Code</label>
+              <select id="campDiscount"><option value="">No discount</option><option value="SPRING25">SPRING25 — 25% off fees</option><option value="EARLYBIRD">EARLYBIRD — 30% off</option><option value="REFER10">REFER10 — 10% referral</option></select>
+            </div>
+            <div class="form-group"><label>Schedule</label><input type="datetime-local"></div>
+            <div class="flex gap-8 mt-4">
+              <button class="btn btn-ghost" onclick="showToast('Draft saved!')">Save Draft</button>
+              <button class="btn btn-primary" style="flex:1" onclick="showToast('🚀 Campaign launched to 420 students!')">Launch Campaign</button>
+            </div>
+          </div>
+
+          <div class="card mt-4">
+            <div class="card-header"><div class="card-title">Recent Campaigns</div></div>
+            <table>
+              <thead><tr><th>Campaign</th><th>Sent</th><th>Open Rate</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td>Spring 2026 Kickoff</td><td>420</td><td>61%</td><td><span class="badge badge-green">Sent</span></td></tr>
+                <tr><td>MBA Open Day</td><td>285</td><td>54%</td><td><span class="badge badge-green">Sent</span></td></tr>
+                <tr><td>Re-engagement Blast</td><td>74</td><td>38%</td><td><span class="badge badge-blue">Scheduled</span></td></tr>
+                <tr><td>International Welcome</td><td>198</td><td>—</td><td><span class="badge badge-gray">Draft</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- PREVIEW -->
+        <div>
+          <div class="section-title" style="margin-bottom:12px">Live Preview</div>
+          <div class="preview-phone" id="previewPane">
+            <div class="preview-label" id="previewLabel">EMAIL PREVIEW</div>
+            <div id="previewContent">
+              <div class="email-preview">
+                <div class="email-header-preview"><h3 id="prevSubject">🎓 Your future awaits!</h3></div>
+                <div class="email-body-preview" id="prevBody">
+                  Hi <strong>{{first_name}}</strong>,<br><br>
+                  We're excited to invite you to apply for our program at Global University! Spaces are filling fast for our upcoming intake.<br><br>
+                  <div class="discount-box-preview" id="prevDiscount">🏷️ Use code <strong>SPRING25</strong> — 25% off fees!</div>
+                  Apply before March 31st to secure your spot!
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card mt-4">
+            <div class="card-title" style="margin-bottom:12px">Personalization Tags</div>
+            <div>
+              <span class="tag">{{first_name}}</span><span class="tag">{{last_name}}</span>
+              <span class="tag">{{program}}</span><span class="tag">{{discount_code}}</span>
+              <span class="tag">{{discount}}</span><span class="tag">{{apply_link}}</span>
+              <span class="tag">{{deadline}}</span><span class="tag">{{university_name}}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DISCOUNT CODES -->
+    <div class="page" id="page-discounts">
+      <div class="card-header" style="margin-bottom:20px">
+        <div class="section-title">Discount & Referral Codes</div>
+        <button class="btn btn-primary" onclick="openCreateCode()">+ Create Code</button>
+      </div>
+      <div class="codes-grid">
+        <div class="code-card">
+          <div class="code-value">SPRING25</div>
+          <div class="code-details">
+            💰 25% off tuition fees<br>
+            📅 Expires: Mar 31, 2026<br>
+            👥 Used: 48 / 200 times<br>
+            🎯 Target: All Bachelor's
+          </div>
+          <div class="code-progress"><div class="code-bar" style="width:24%"></div></div>
+          <div class="text-muted" style="margin-top:6px;font-size:0.75rem">24% redeemed</div>
+          <div class="flex gap-8 mt-4"><button class="btn btn-ghost btn-sm">Copy Link</button><button class="btn btn-primary btn-sm">Send in Campaign</button></div>
+        </div>
+        <div class="code-card">
+          <div class="code-value" style="color:var(--accent2)">EARLYBIRD</div>
+          <div class="code-details">
+            💰 30% off first semester<br>
+            📅 Expires: Feb 28, 2026<br>
+            👥 Used: 62 / 100 times<br>
+            🎯 Target: Master's Programs
+          </div>
+          <div class="code-progress"><div class="code-bar" style="width:62%;background:linear-gradient(90deg,var(--accent2),#c4b5fd)"></div></div>
+          <div class="text-muted" style="margin-top:6px;font-size:0.75rem">62% redeemed</div>
+          <div class="flex gap-8 mt-4"><button class="btn btn-ghost btn-sm">Copy Link</button><button class="btn btn-primary btn-sm">Send in Campaign</button></div>
+        </div>
+        <div class="code-card">
+          <div class="code-value" style="color:var(--accent3)">REFER10</div>
+          <div class="code-details">
+            💰 10% off — Referral reward<br>
+            📅 No expiry<br>
+            👥 Used: 18 / unlimited<br>
+            🎯 Target: Referred students
+          </div>
+          <div class="code-progress"><div class="code-bar" style="width:18%;background:linear-gradient(90deg,var(--accent3),#6ee7b7)"></div></div>
+          <div class="text-muted" style="margin-top:6px;font-size:0.75rem">18 redemptions</div>
+          <div class="flex gap-8 mt-4"><button class="btn btn-ghost btn-sm">Copy Link</button><button class="btn btn-primary btn-sm">Send in Campaign</button></div>
+        </div>
+        <div class="code-card">
+          <div class="code-value" style="color:var(--accent4)">INTER20</div>
+          <div class="code-details">
+            💰 20% off for international students<br>
+            📅 Expires: Apr 30, 2026<br>
+            👥 Used: 9 / 50 times<br>
+            🎯 Target: International Leads
+          </div>
+          <div class="code-progress"><div class="code-bar" style="width:18%;background:linear-gradient(90deg,var(--accent4),#fbbf24)"></div></div>
+          <div class="text-muted" style="margin-top:6px;font-size:0.75rem">18% redeemed</div>
+          <div class="flex gap-8 mt-4"><button class="btn btn-ghost btn-sm">Copy Link</button><button class="btn btn-primary btn-sm">Send in Campaign</button></div>
+        </div>
+        <div class="code-card" style="border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;min-height:200px" onclick="openCreateCode()">
+          <div style="text-align:center;color:var(--muted)">
+            <div style="font-size:2rem;margin-bottom:8px">+</div>
+            <div style="font-size:0.85rem;font-weight:600">Create New Code</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TEMPLATES -->
+    <div class="page" id="page-templates">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Message Templates</div><button class="btn btn-primary btn-sm" onclick="showToast('Template editor coming soon!')">+ New Template</button></div>
+        <table>
+          <thead><tr><th>Template Name</th><th>Channel</th><th>Category</th><th>Last Used</th><th>Actions</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Welcome Email</strong></td><td><span class="badge badge-blue">Email</span></td><td>Onboarding</td><td>2 days ago</td><td><button class="btn btn-ghost btn-sm">Edit</button></td></tr>
+            <tr><td><strong>Application Reminder</strong></td><td><span class="badge badge-green">SMS</span></td><td>Follow-up</td><td>1 week ago</td><td><button class="btn btn-ghost btn-sm">Edit</button></td></tr>
+            <tr><td><strong>Discount Offer</strong></td><td><span class="badge badge-blue">Email</span></td><td>Promotional</td><td>3 days ago</td><td><button class="btn btn-ghost btn-sm">Edit</button></td></tr>
+            <tr><td><strong>Open Day Invite</strong></td><td><span class="badge badge-purple">WhatsApp</span></td><td>Events</td><td>5 days ago</td><td><button class="btn btn-ghost btn-sm">Edit</button></td></tr>
+            <tr><td><strong>Enrollment Confirmation</strong></td><td><span class="badge badge-blue">Email</span></td><td>Transactional</td><td>Today</td><td><button class="btn btn-ghost btn-sm">Edit</button></td></tr>
+            <tr><td><strong>Re-engagement Nudge</strong></td><td><span class="badge badge-green">SMS</span></td><td>Re-engagement</td><td>2 weeks ago</td><td><button class="btn btn-ghost btn-sm">Edit</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="page" id="page-analytics">
+      <div class="stats-grid">
+        <div class="stat-card blue"><div class="stat-label">Avg Open Rate</div><div class="stat-value">58%</div><div class="stat-change up">▲ 4% vs last month</div></div>
+        <div class="stat-card green"><div class="stat-label">Conversion Rate</div><div class="stat-value">26%</div><div class="stat-change up">▲ 2.1%</div></div>
+        <div class="stat-card orange"><div class="stat-label">Avg Response Time</div><div class="stat-value">1.4d</div><div class="stat-change up">▼ Improved</div></div>
+        <div class="stat-card purple"><div class="stat-label">Cost per Enrollment</div><div class="stat-value">$42</div><div class="stat-change up">▼ Down 18%</div></div>
+      </div>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Campaign Performance</div></div>
+          <table>
+            <thead><tr><th>Campaign</th><th>Sent</th><th>Opened</th><th>Clicked</th><th>Enrolled</th></tr></thead>
+            <tbody>
+              <tr><td>Spring 2026</td><td>420</td><td>61%</td><td>32%</td><td>14%</td></tr>
+              <tr><td>MBA Open Day</td><td>285</td><td>54%</td><td>28%</td><td>11%</td></tr>
+              <tr><td>Re-engagement</td><td>74</td><td>38%</td><td>18%</td><td>8%</td></tr>
+              <tr><td>INTER20 Promo</td><td>198</td><td>49%</td><td>24%</td><td>9%</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Channel Effectiveness</div></div>
+          <div style="padding:10px 0">
+            <div style="margin-bottom:14px">
+              <div class="flex gap-8" style="margin-bottom:6px"><span style="font-size:0.83rem">📧 Email</span><span class="ml-auto" style="font-size:0.83rem;font-weight:600">61% open rate</span></div>
+              <div style="height:8px;background:var(--bg);border-radius:8px;overflow:hidden"><div style="height:100%;width:61%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:8px"></div></div>
+            </div>
+            <div style="margin-bottom:14px">
+              <div class="flex gap-8" style="margin-bottom:6px"><span style="font-size:0.83rem">📱 WhatsApp</span><span class="ml-auto" style="font-size:0.83rem;font-weight:600">84% read rate</span></div>
+              <div style="height:8px;background:var(--bg);border-radius:8px;overflow:hidden"><div style="height:100%;width:84%;background:linear-gradient(90deg,var(--accent3),#6ee7b7);border-radius:8px"></div></div>
+            </div>
+            <div style="margin-bottom:14px">
+              <div class="flex gap-8" style="margin-bottom:6px"><span style="font-size:0.83rem">💬 SMS</span><span class="ml-auto" style="font-size:0.83rem;font-weight:600">72% read rate</span></div>
+              <div style="height:8px;background:var(--bg);border-radius:8px;overflow:hidden"><div style="height:100%;width:72%;background:linear-gradient(90deg,var(--accent4),#fbbf24);border-radius:8px"></div></div>
+            </div>
+            <div>
+              <div class="flex gap-8" style="margin-bottom:6px"><span style="font-size:0.83rem">🏷️ Discount Codes</span><span class="ml-auto" style="font-size:0.83rem;font-weight:600">34% redemption</span></div>
+              <div style="height:8px;background:var(--bg);border-radius:8px;overflow:hidden"><div style="height:100%;width:34%;background:linear-gradient(90deg,var(--accent2),#c4b5fd);border-radius:8px"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ENROLLMENTS -->
+    <div class="page" id="page-enrollments">
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">Enrolled Students</div><div class="card-subtitle">342 confirmed enrollments</div></div>
+          <button class="btn btn-ghost btn-sm">Export</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Student</th><th>Program</th><th>Start Date</th><th>Discount Used</th><th>Fee Status</th><th>Source</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Sofia Martinez</strong></td><td>MBA</td><td>Sep 2026</td><td><span class="badge badge-purple">EARLYBIRD -30%</span></td><td><span class="badge badge-green">Paid ✓</span></td><td>Email</td></tr>
+              <tr><td><strong>Priya Sharma</strong></td><td>BA Psychology</td><td>Sep 2026</td><td><span class="badge badge-blue">SPRING25 -25%</span></td><td><span class="badge badge-green">Paid ✓</span></td><td>LinkedIn</td></tr>
+              <tr><td><strong>Tom Fischer</strong></td><td>BSc Engineering</td><td>Jan 2027</td><td>—</td><td><span class="badge badge-orange">Pending</span></td><td>Referral</td></tr>
+              <tr><td><strong>Amara Diallo</strong></td><td>MSc Data Science</td><td>Sep 2026</td><td><span class="badge badge-orange">INTER20 -20%</span></td><td><span class="badge badge-green">Paid ✓</span></td><td>WhatsApp</td></tr>
+              <tr><td><strong>Lucas Kim</strong></td><td>BSc CS</td><td>Sep 2026</td><td><span class="badge badge-green">REFER10 -10%</span></td><td><span class="badge badge-orange">Pending</span></td><td>Referral</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- MODALS -->
+<div class="modal-overlay" id="addStudentModal">
+  <div class="modal">
+    <div class="modal-title">Add New Student / Lead</div>
+    <div class="form-group"><label>Full Name</label><input id="newName" placeholder="e.g. James Okafor"></div>
+    <div class="form-group"><label>Email</label><input id="newEmail" type="email" placeholder="james@email.com"></div>
+    <div class="form-group"><label>Phone / WhatsApp</label><input placeholder="+1 555 000 0000"></div>
+    <div class="form-group"><label>Program Interest</label><select><option>BSc Computer Science</option><option>BSc Business</option><option>BSc Engineering</option><option>MBA</option><option>MSc Data Science</option><option>MSc Finance</option><option>MA Communications</option></select></div>
+    <div class="form-group"><label>Source</label><select><option>LinkedIn</option><option>Email Campaign</option><option>WhatsApp</option><option>Referral</option><option>Walk-in</option><option>Website</option></select></div>
+    <div class="form-group"><label>Notes</label><textarea placeholder="Any notes about this lead…" style="min-height:70px"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('addStudentModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addStudent()">Add Lead</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="createCodeModal">
+  <div class="modal">
+    <div class="modal-title">Create Discount Code</div>
+    <div class="form-group"><label>Code Name</label><input placeholder="e.g. WELCOME30"></div>
+    <div class="form-group"><label>Discount Type</label><select><option>Percentage off tuition</option><option>Fixed amount off</option><option>First semester discount</option></select></div>
+    <div class="form-group"><label>Discount Amount (%)</label><input type="number" placeholder="e.g. 25"></div>
+    <div class="form-group"><label>Max Redemptions</label><input type="number" placeholder="e.g. 100 (leave blank for unlimited)"></div>
+    <div class="form-group"><label>Expiry Date</label><input type="date"></div>
+    <div class="form-group"><label>Target Program</label><select><option>All Programs</option><option>Bachelor's Only</option><option>Master's Only</option><option>MBA Only</option></select></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('createCodeModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCode()">Create Code</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// NAVIGATION
+function navigate(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  if(el) el.classList.add('active');
+  const titles = { dashboard:'Dashboard', pipeline:'Lead Pipeline', students:'All Students', segments:'Segments', campaigns:'Campaigns', discounts:'Discount Codes', templates:'Templates', analytics:'Analytics', enrollments:'Enrollments' };
+  document.getElementById('pageTitle').textContent = titles[page] || page;
+}
+
+// STUDENTS TABLE
+const students = [
+  { name:'James Okafor', email:'james@gmail.com', program:'BSc CS', source:'LinkedIn', stage:'Contacted', discount:'SPRING25' },
+  { name:'Aisha Kamara', email:'aisha@email.com', program:'MBA', source:'WhatsApp', stage:'Applied', discount:'SPRING25' },
+  { name:'Marco Torres', email:'marco@mail.com', program:'MSc Data Sci', source:'Email', stage:'Offer Sent', discount:'EARLYBIRD' },
+  { name:'Priya Sharma', email:'priya@mail.com', program:'BA Psychology', source:'LinkedIn', stage:'Enrolled', discount:'SPRING25' },
+  { name:'Lena Weber', email:'lena@web.de', program:'MBA', source:'Email', stage:'New Lead', discount:'' },
+  { name:'Ahmed Yusuf', email:'ahmed@mail.ng', program:'BSc Engineering', source:'Referral', stage:'New Lead', discount:'' },
+  { name:'Sofia Martinez', email:'sofia@mail.com', program:'MBA', source:'Email', stage:'Enrolled', discount:'EARLYBIRD' },
+  { name:'Raj Patel', email:'raj@mail.in', program:'BSc Business', source:'Website', stage:'Applied', discount:'' },
+];
+
+function renderStudents(list) {
+  const stageColors = { 'New Lead':'badge-gray','Contacted':'badge-blue','Applied':'badge-orange','Offer Sent':'badge-purple','Enrolled':'badge-green' };
+  document.getElementById('studentsTable').innerHTML = list.map(s => `
+    <tr>
+      <td><input type="checkbox" class="checkbox"></td>
+      <td><strong>${s.name}</strong></td>
+      <td style="color:var(--muted)">${s.email}</td>
+      <td>${s.program}</td>
+      <td><span class="badge badge-blue">${s.source}</span></td>
+      <td><span class="badge ${stageColors[s.stage]}">${s.stage}</span></td>
+      <td>${s.discount ? `<span class="badge badge-purple">${s.discount}</span>` : '—'}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="showToast('Opening ${s.name} profile…')">View</button></td>
+    </tr>
+  `).join('');
+}
+renderStudents(students);
+
+// MODALS
+function openAddStudent() { document.getElementById('addStudentModal').classList.add('open'); }
+function openCreateCode() { document.getElementById('createCodeModal').classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); }));
+
+function addStudent() {
+  const name = document.getElementById('newName').value || 'New Student';
+  students.unshift({ name, email: document.getElementById('newEmail').value || 'email@example.com', program:'TBD', source:'Manual', stage:'New Lead', discount:'' });
+  renderStudents(students);
+  closeModal('addStudentModal');
+  showToast(`✅ ${name} added as new lead!`);
+}
+function saveCode() { closeModal('createCodeModal'); showToast('🏷️ Discount code created!'); }
+
+// TOAST
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.style.display='none', 3000);
+}
+
+// CAMPAIGN PREVIEW
+let currentChannel = 'email';
+function switchChannel(ch, el) {
+  currentChannel = ch;
+  document.querySelectorAll('.channel-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('subjectGroup').style.display = ch === 'email' ? 'block' : 'none';
+  updatePreview();
+}
+function updatePreview() {
+  const body = document.getElementById('campBody').value;
+  const subject = document.getElementById('campSubject').value || '🎓 Your future awaits!';
+  const discount = document.getElementById('campDiscount').value;
+  const label = { email:'EMAIL PREVIEW', sms:'SMS PREVIEW', whatsapp:'WHATSAPP PREVIEW' };
+  document.getElementById('previewLabel').textContent = label[currentChannel];
+  if(currentChannel === 'email') {
+    document.getElementById('previewContent').innerHTML = `
+      <div class="email-preview">
+        <div class="email-header-preview"><h3>${subject}</h3></div>
+        <div class="email-body-preview">${body.replace(/\n/g,'<br>')}
+          ${discount ? `<div class="discount-box-preview">🏷️ Use code <strong>${discount}</strong></div>` : ''}
+        </div>
+      </div>`;
+  } else {
+    document.getElementById('previewContent').innerHTML = `
+      <div class="sms-bubble">${body.replace(/\n/g,'<br>')}${discount ? `\n\n🏷️ Code: <strong>${discount}</strong>` : ''}</div>
+      <div style="font-size:0.72rem;color:var(--muted);margin-top:6px;padding-left:4px">Delivered · ${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div>`;
+  }
+}
+
+// ENROLLMENT CHART
+function buildChart() {
+  const data = [28,34,42,38,55,61,48,72,68,85,79,92];
+  const months = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+  const max = Math.max(...data);
+  const wrap = document.getElementById('enrollChart');
+  if(!wrap) return;
+  wrap.innerHTML = data.map((v,i) => `
+    <div class="bar-group">
+      <div class="bar" style="height:${(v/max)*130}px;background:linear-gradient(180deg,${i===11?'#4f8ef7':'#1e3a5f'},${i===11?'#a78bfa':'#2d4a7a'})" title="${v} enrollments"></div>
+      <span class="bar-label">${months[i]}</span>
+    </div>`).join('');
+}
+buildChart();
+</script>
+</body>
+</html>
